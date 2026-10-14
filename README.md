@@ -1,3 +1,7 @@
+
+
+https://github.com/user-attachments/assets/f6d08e6c-1520-442b-91dd-73bc634a7352
+
 <div align="center">
 
 # CVTranslate
@@ -19,8 +23,10 @@
 
 ---
 
-<!-- 宣传视频：在 github.com 编辑本文件，把 cvtranslate-promo.mp4 拖到下一行，并删除这两行注释。 -->
-<!-- PROMO_VIDEO_PLACEHOLDER -->
+
+https://github.com/user-attachments/assets/e27c5e9e-4755-431c-adf4-5e50ce832f03
+
+
 
 ## 简介
 
