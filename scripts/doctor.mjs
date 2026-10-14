@@ -41,7 +41,8 @@ main(async () => {
   });
   if (argumentsList.includes('--debug')) await inspect('Delve', () => run('dlv', ['version'], { capture: true }));
   if (process.platform === 'darwin') {
-    await inspect('macOS archive tool', () => run('ditto', ['--help'], { capture: true }));
+    // ditto has no help/version flag that exits 0, so only resolve it on PATH.
+    await inspect('macOS archive tool', () => run('which', ['ditto'], { capture: true }));
     await inspect('macOS native compiler', async () => {
       const cgo = await run('go', ['env', 'CGO_ENABLED'], { capture: true });
       if (cgo !== '1') throw new Error('CGO_ENABLED=1 is required for macOS Accessibility and Keychain integration.');
