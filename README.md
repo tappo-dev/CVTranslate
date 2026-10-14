@@ -1,7 +1,5 @@
 
 
-https://github.com/user-attachments/assets/f6d08e6c-1520-442b-91dd-73bc634a7352
-
 <div align="center">
 
 # CVTranslate
