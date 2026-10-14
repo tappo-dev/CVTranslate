@@ -6,7 +6,9 @@ On the intended Windows/macOS host, install the locked dependencies with
 `npm ci`, run `npm run doctor`, and run `npm run build`. Node and Go target
 architectures must match; cross-compilation is not used as desktop acceptance.
 The shared checks run once, including the frontend build, then Go embeds the
-production assets and produces the release binary.
+production assets and produces the release binary. Packaging writes the shared
+application icon into the Windows executable or macOS application bundle before
+the side-effect-free version smoke test.
 
 Local builds use the version in root `package.json`. CI passes
 `--release-version=X.Y.Z` instead (see [continuous integration](development/workflows.md#continuous-integration)).
@@ -31,10 +33,12 @@ destination before rebuilding it.
 
 The ZIP contains only:
 
-- Windows: `cvtranslate.exe`.
-- macOS: `CVTranslate.app/Contents/MacOS/cvtranslate` and `Contents/Info.plist`.
-  The stable bundle ID is `com.cvtranslate.desktop`, with `LSUIElement=true` for
-  a background application, not a new native main window.
+- Windows: `cvtranslate.exe`, including multi-size icon resources displayed by
+  Explorer and Windows shortcuts.
+- macOS: `CVTranslate.app/Contents/MacOS/cvtranslate`, `Contents/Info.plist` and
+  `Contents/Resources/CVTranslate.icns`. The stable bundle ID is
+  `com.cvtranslate.desktop`; `Info.plist` declares the icon and keeps
+  `LSUIElement=true` for a background application, not a new native main window.
 - `LICENSE`, `RELEASE.md`, `THIRD-PARTY-NOTICES.txt`, `build-manifest.json`, `SHA256SUMS`.
 
 The final output directory also contains the ZIP. Its external `SHA256SUMS`

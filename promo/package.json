@@ -1,0 +1,21 @@
+{
+  "name": "cvtranslate-promo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sfx": "node scripts/generate-sfx.mjs",
+    "narration": "node scripts/generate-narration.mjs",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts CVTranslatePromo out/cvtranslate-promo.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.535",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.535"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}

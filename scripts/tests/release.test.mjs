@@ -4,9 +4,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { inflateRawSync } from 'node:zlib';
+import { NtExecutable, NtExecutableResource } from '@shockpkg/resedit';
 import { formatNotice, getDeclaredLicense } from '../lib/notices.mjs';
 import { parseJsonStream, verifyArchitecture } from '../lib/pipeline.mjs';
-import { appInfoPlist, createArchive, nextReleaseVersion, releaseFiles, validateVersion, verifyWhitelist, writeChecksums } from '../lib/release.mjs';
+import { appInfoPlist, createArchive, embedWindowsExecutableIcon, nextReleaseVersion, releaseFiles, validateVersion, verifyWhitelist, writeChecksums } from '../lib/release.mjs';
 
 async function fixture(context) {
   const directory = await mkdtemp(join(tmpdir(), 'cvtranslate release tests '));
@@ -56,8 +57,46 @@ test('macOS whitelist permits only the declared bundle files', async context => 
   await writeFile(join(directory, 'LICENSE'), 'LICENSE');
   await rm(join(directory, 'CVTranslate.app/Contents/Info.plist'));
   await assert.rejects(verifyWhitelist(directory, filenames), /Missing release entry/);
+  assert.ok(filenames.includes('CVTranslate.app/Contents/Resources/CVTranslate.icns'));
   assert.match(appInfoPlist('0.1.0'), /com\.cvtranslate\.desktop/);
+  assert.match(appInfoPlist('0.1.0'), /<key>CFBundleIconFile<\/key><string>CVTranslate\.icns<\/string>/);
   assert.match(appInfoPlist('0.1.0'), /<key>LSUIElement<\/key><true\/>/);
+});
+
+test('Windows executable embedding adds every generated icon representation', async context => {
+  const directory = await fixture(context);
+  const executable = join(directory, 'cvtranslate.exe');
+  await writeFile(executable, Buffer.from(NtExecutable.createEmpty(false, false).generate()));
+  await embedWindowsExecutableIcon(
+    executable,
+    new URL('../../internal/platform/icons/application-windows.ico', import.meta.url),
+  );
+  const resources = NtExecutableResource.from(NtExecutable.from(await readFile(executable)));
+  const iconImages = resources.entries.filter(entry => entry.type === 3 && entry.lang === 1033);
+  const iconGroups = resources.entries.filter(entry => entry.type === 14 && entry.lang === 1033);
+  assert.equal(iconImages.length, 9);
+  assert.equal(iconGroups.length, 1);
+});
+
+test('macOS application icon contains standard and Retina PNG representations', async () => {
+  const icon = await readFile(new URL('../../internal/platform/icons/application-macos.icns', import.meta.url));
+  assert.equal(icon.subarray(0, 4).toString('ascii'), 'icns');
+  assert.equal(icon.readUInt32BE(4), icon.length);
+  const representationTypes = new Set();
+  let entryOffset = 8;
+  while (entryOffset < icon.length) {
+    const representationType = icon.subarray(entryOffset, entryOffset + 4).toString('ascii');
+    const entryLength = icon.readUInt32BE(entryOffset + 4);
+    assert.ok(entryLength > 8, `Invalid ${representationType} entry length`);
+    assert.deepEqual([...icon.subarray(entryOffset + 8, entryOffset + 16)], [137, 80, 78, 71, 13, 10, 26, 10]);
+    representationTypes.add(representationType);
+    entryOffset += entryLength;
+  }
+  assert.equal(entryOffset, icon.length);
+  assert.deepEqual(
+    representationTypes,
+    new Set(['icp4', 'icp5', 'icp6', 'ic07', 'ic08', 'ic09', 'ic10', 'ic11', 'ic12', 'ic13', 'ic14']),
+  );
 });
 
 test('checksums use exact staged bytes and exclude the checksum file itself', async context => {

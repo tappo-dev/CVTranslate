@@ -163,10 +163,12 @@ path. `Close` joins the event worker before removing native resources. No browse
 shutdown endpoint, persistence change, new runtime dependency or native main window is
 introduced. `--no-native` and `--version` do not create an icon.
 
-The sidebar and favicon share `web/public/icon.svg`. Native adapters embed PNGs
-generated from that same source; macOS uses a monochrome template tinted by
-AppKit. Rasterization is development-only, not a runtime dependency. The shared
-checks reject stale assets; see [icon maintenance](development/icons.md).
+The sidebar and favicon share `web/public/icon.svg`. Native adapters embed tray
+PNGs generated from that same source; macOS uses a monochrome template tinted by
+AppKit. Release packaging also derives the Windows executable ICO and macOS app
+bundle ICNS from the same SVG. Rasterization and Windows resource editing are
+development-only, not runtime dependencies. The shared checks reject stale
+assets; see [icon maintenance](development/icons.md).
 
 Translation shortcuts use explicitly copied clipboard text only. On Windows,
 `Ctrl+C*3` is fixed to translate-and-paste and `Ctrl+C*4` is fixed to submit the

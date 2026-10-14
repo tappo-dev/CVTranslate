@@ -1,14 +1,37 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { readdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { run } from './process.mjs';
 
 export function releaseFiles(platform) {
   const executableFiles = platform === 'darwin'
-    ? ['CVTranslate.app/Contents/MacOS/cvtranslate', 'CVTranslate.app/Contents/Info.plist']
+    ? [
+        'CVTranslate.app/Contents/MacOS/cvtranslate',
+        'CVTranslate.app/Contents/Info.plist',
+        'CVTranslate.app/Contents/Resources/CVTranslate.icns',
+      ]
     : ['cvtranslate.exe'];
   return [...executableFiles, 'LICENSE', 'RELEASE.md', 'THIRD-PARTY-NOTICES.txt', 'build-manifest.json', 'SHA256SUMS'];
+}
+
+export async function embedWindowsExecutableIcon(executableFilename, iconFilename) {
+  const { Data, NtExecutable, NtExecutableResource, Resource } = await import('@shockpkg/resedit');
+  const [executableBytes, iconBytes] = await Promise.all([
+    readFile(executableFilename),
+    readFile(iconFilename),
+  ]);
+  const executable = NtExecutable.from(executableBytes);
+  const resources = NtExecutableResource.from(executable);
+  const iconFile = Data.IconFile.from(iconBytes);
+  Resource.IconGroupEntry.replaceIconsForResource(
+    resources.entries,
+    1,
+    1033,
+    iconFile.icons.map(icon => icon.data),
+  );
+  resources.outputResource(executable);
+  await writeFile(executableFilename, Buffer.from(executable.generate()));
 }
 
 export async function verifyWhitelist(directory, allowedFiles) {
@@ -108,6 +131,7 @@ export function appInfoPlist(version) {
   <key>CFBundleName</key><string>CVTranslate</string>
   <key>CFBundleDisplayName</key><string>CVTranslate</string>
   <key>CFBundleExecutable</key><string>cvtranslate</string>
+  <key>CFBundleIconFile</key><string>CVTranslate.icns</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>${version.split(/[-+]/)[0]}</string>
   <key>CFBundleVersion</key><string>${version.split(/[-+]/)[0]}</string>

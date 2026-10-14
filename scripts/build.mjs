@@ -2,7 +2,7 @@ import { chmod, copyFile, mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/
 import { join, resolve } from 'node:path';
 import { checkPipeline } from './lib/pipeline.mjs';
 import { collectNotices } from './lib/notices.mjs';
-import { appInfoPlist, createArchive, releaseFiles, validateVersion, verifyWhitelist, writeChecksums } from './lib/release.mjs';
+import { appInfoPlist, createArchive, embedWindowsExecutableIcon, releaseFiles, validateVersion, verifyWhitelist, writeChecksums } from './lib/release.mjs';
 import { exists, main, readPackage, rootDirectory, run } from './lib/process.mjs';
 
 main(async () => {
@@ -58,11 +58,23 @@ main(async () => {
     const executable = join(payload, executableRelative);
     if (process.platform === 'darwin') {
       await mkdir(join(payload, 'CVTranslate.app', 'Contents', 'MacOS'), { recursive: true });
+      await mkdir(join(payload, 'CVTranslate.app', 'Contents', 'Resources'), { recursive: true });
       await writeFile(join(payload, 'CVTranslate.app', 'Contents', 'Info.plist'), appInfoPlist(version));
+      await copyFile(
+        join(rootDirectory, 'internal', 'platform', 'icons', 'application-macos.icns'),
+        join(payload, 'CVTranslate.app', 'Contents', 'Resources', 'CVTranslate.icns'),
+      );
     }
-    const linkerFlags = `${platform === 'windows' ? '-H=windowsgui ' : ''}-X main.version=${version} -X main.commit=${commit} -X main.buildTime=${buildTime}`;
+    const linkerFlags = `${platform === 'windows' ? '-s -w -H=windowsgui ' : ''}-X main.version=${version} -X main.commit=${commit} -X main.buildTime=${buildTime}`;
     await run('go', ['build', '-trimpath', '-buildvcs=false', '-ldflags', linkerFlags, '-o', executable, './cmd/cvtranslate']);
-    if (process.platform === 'darwin') await chmod(executable, 0o755);
+    if (process.platform === 'darwin') {
+      await chmod(executable, 0o755);
+    } else {
+      await embedWindowsExecutableIcon(
+        executable,
+        join(rootDirectory, 'internal', 'platform', 'icons', 'application-windows.ico'),
+      );
+    }
     const versionOutput = await run(executable, ['--version', '--no-native', '--no-open'], { capture: true });
     if (!versionOutput.includes(version)) throw new Error('Version smoke check did not report the package version.');
     await copyFile(join(rootDirectory, 'LICENSE'), join(payload, 'LICENSE'));

@@ -10,7 +10,7 @@ main(async () => {
   }
   if (argumentsList[0] === '--check') {
     await verifyIconAssets();
-    console.log('SVG and native tray assets are in sync.');
+    console.log('SVG and desktop icon assets are in sync.');
     return;
   }
   for (const [filename, contents] of await renderIconAssets()) {

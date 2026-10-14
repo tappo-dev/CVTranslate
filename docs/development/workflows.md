@@ -120,14 +120,17 @@ node --test scripts/tests/lifecycle.test.mjs scripts/tests/release.test.mjs
 ## Application icons
 
 Edit `web/public/icon.svg`, then run `npm run icons` to regenerate the monochrome
-SVG and embedded native PNGs. Keep these source assets in version control so
-Go dev/F5 builds need no new prerequisite. The rasterizer is development-only;
-the WebUI consumes SVG directly. See [icon maintenance](icons.md).
+SVG, embedded native PNGs, Windows ICO and macOS ICNS. Keep these generated
+assets in version control so Go dev/F5 and release builds need no rasterizer at
+compile time. Icon generation and Windows executable resource editing are
+development-only; the WebUI consumes SVG directly. See
+[icon maintenance](icons.md).
 
 ## Packaging
 
 `npm run build` calls the same pipeline once, then compiles a version-stamped
-production executable and stages a current-host archive. See
+production executable, applies the platform application icon and stages a
+current-host archive. See
 [release instructions](../release.md) for contents, notices, signing limitations
 and manual acceptance. It does not call `npm run check` recursively or duplicate
 the frontend build. A build never modifies application data, uploads artifacts,
