@@ -1,0 +1,38 @@
+---
+description: Desktop WebUI typing, shared components and security
+globs: "web/src/**/*.{ts,tsx,css}"
+alwaysApply: false
+---
+Follow CONTRIBUTING.md and the API contract in docs/development/api.md.
+Follow CONTRIBUTING.md's WebUI copy and interaction conventions: no tutorials,
+slogans or redundant helper text; retain concise safety warnings and errors.
+Reuse the shared Radix UI tabs, notifications and confirmation dialogs.
+All rendered text must be >=12 CSS px, including hints, badges and placeholders.
+Use the typography/spacing tokens in styles.css; never shrink text to make it fit.
+Keep explicit padding/margin/gap between fields, auxiliary actions and controls.
+Vertically center controls/icons/text/counters inside control-only or wrapped rows
+with align-items: center; remove inline helper-text vertical margins, not gaps.
+Follow CONTRIBUTING.md's toolbar/form-row contract: align actual control boxes,
+not label/input wrappers; reuse --control-height and shared toolbar styles.
+Bottom-align labeled field rows with actions; center action contents internally.
+Keep search/select/date/icon/text controls equal-height in every wrapped row,
+including disabled/loading states; no blank labels, spacers or positional nudges.
+Align peer cards' top AND bottom edges with shared Grid/Flex stretch layouts,
+including empty/editor states; no fixed-height or spacer hacks.
+Follow CONTRIBUTING.md's typography, spacing and card-layout requirements.
+Follow its visual quality baseline for hierarchy, contrast, consistent controls,
+action priority, long text, stable states, focus, overlays and reduced motion.
+Enforce its cross-page consistency contract: `.page-content` owns page width,
+outer padding and centering; no page-local wrapper width caps or extra gutters.
+Align full-width headings/tabs/content/save bars to shared content edges; use
+the same visual system for equivalent controls/states across pages. Exceptions
+require explicit approval and a documented functional reason.
+Reuse shared styles; do not add page-specific visual systems or decoration.
+Review applicable long/empty/error/loading/focus states without expanding scope
+or treating source checks as authorized browser/visual acceptance.
+Use strict types and shared API/components rather than duplicate business rules.
+Use semantic labels/buttons, keyboard focus and visible loading/error states.
+Render external content as text; never fetch provider endpoints from the browser.
+Do not expose stored credentials or silently persist temporary page selections.
+Desktop light/dark themes share semantic color tokens; follow CONTRIBUTING.md.
+Do not introduce unrelated clients or themes.

@@ -1,0 +1,6 @@
+# Match .editorconfig on every checkout; gofmt and icon checks require LF.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.icns binary

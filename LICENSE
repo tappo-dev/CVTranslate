@@ -1,0 +1,112 @@
+CVTranslate Noncommercial License 1.0
+
+Copyright (c) 2026 CVTranslate contributors
+Original repository: https://github.com/tappo-dev/CVTranslate
+
+Source available. Noncommercial use is permitted without a license fee.
+Commercial use requires separate prior written authorization.
+
+1. Scope
+
+This license covers the original CVTranslate software and accompanying
+documentation (the "Software"). Each copyright holder licenses only the
+material in which they hold the necessary rights. The collective attribution
+above does not transfer ownership of individual contributions.
+
+Separately identified third-party components remain subject to their own
+licenses. This license does not restrict rights granted under those licenses
+or rights that applicable law gives you independently of this license.
+
+2. Noncommercial permission
+
+Subject to these terms, the copyright holders grant you a non-exclusive,
+worldwide, royalty-free permission to use, copy, study, run, modify and
+redistribute the Software, in source or binary form, solely for noncommercial
+purposes. Examples include personal learning, noncommercial research,
+evaluation and noncommercial self-hosting without an intended commercial
+application.
+
+Redistribution, including modified versions, must comply with section 4.
+This license does not require you to publish private modifications or the
+source code of a distributed binary, but it does not permit removing the
+noncommercial restrictions on the original Software.
+
+3. Commercial use
+
+Commercial use is not granted by this license. Before any commercial use,
+obtain separate written authorization from the relevant copyright holders.
+Permission from a contributor covers only the rights they can authorize.
+
+Commercial use includes, without limitation:
+
+- selling, renting or licensing the Software or a modified version for a fee;
+- providing paid access, hosting, translation, integration or support services
+  using the Software;
+- including the Software in a commercial product, subscription or service;
+- using the Software to operate, support, market or deliver a business,
+  including internal production and professional business workflows; and
+- using the Software for advertising-supported or other revenue-generating
+  services, even when end users are not charged directly.
+
+Not charging for the Software itself does not make a commercial use
+noncommercial. Public availability of the source, attribution, a donation or
+the absence of a response to an authorization request is not commercial
+permission. If the intended use is unclear, obtain written clarification
+before relying on this license.
+
+4. Attribution and redistribution
+
+Every copy or substantial portion of the Software that you redistribute,
+whether unchanged or modified and whether in source or binary form, must:
+
+- include this license in full and retain the original copyright notices;
+- retain the original project's name and original GitHub repository URL, as
+  supplied by its copyright holders, in the README or accompanying notices;
+- display that original repository link and attribution in the distributed
+  project's README or documentation, not merely a link to a fork;
+- clearly identify material modifications and their authors without implying
+  that a modified version is an official release or endorsed by the original
+  authors; and
+- preserve all applicable third-party license and attribution notices.
+
+The original repository is the upstream GitHub repository in which the
+copyright holders publish CVTranslate, not a downstream fork or mirror.
+Do not remove or obscure that repository link or the original attribution,
+or represent the original Software as entirely your own work. You may add
+your own attribution for your changes without replacing the original notices.
+
+Recipients receive permission for the original Software under this license.
+You may not offer the original Software under terms that purport to authorize
+commercial use or remove the obligations of this license.
+
+5. No trademark or third-party service authorization
+
+This license does not grant rights to use trademarks, logos or names to imply
+affiliation, endorsement or official status. Factual attribution required by
+section 4 is permitted. CVTranslate is an independent project; third-party
+names and marks remain the property of their respective owners.
+
+This license does not grant access to third-party accounts, models or APIs,
+waive their fees, or replace their terms of service. You are responsible for
+obtaining the necessary service permissions and complying with those terms.
+
+6. Termination
+
+The permissions granted by this license terminate if you violate its terms.
+Any use requiring permission must then cease unless separately authorized
+by the relevant copyright holders. Rights not expressly granted are reserved.
+
+7. Disclaimer and limitation of liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, ACCURACY,
+AVAILABILITY AND NONINFRINGEMENT. THE AUTHORS AND COPYRIGHT HOLDERS SHALL
+NOT BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT,
+TORT OR OTHERWISE, ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+8. Authoritative text
+
+This English text is the authoritative license. Translations and summaries
+are explanatory only. This is a custom source-available, noncommercial
+license, not an OSI-approved open source license, MIT, GPL or PolyForm.

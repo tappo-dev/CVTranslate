@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <title>CVTranslate</title>
+  <defs>
+    <rect id="first-press" x="2" y="2" width="18" height="18" rx="4.5"/>
+    <rect id="second-press" x="7" y="7" width="18" height="18" rx="4.5"/>
+    <rect id="third-press" x="12" y="12" width="18" height="18" rx="4.5"/>
+    <mask id="first-press-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff"/>
+      <use href="#second-press" fill="#000" stroke="#000" stroke-width="2.6"/>
+    </mask>
+    <mask id="second-press-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff"/>
+      <use href="#third-press" fill="#000" stroke="#000" stroke-width="2.6"/>
+    </mask>
+    <mask id="third-press-cutout" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32">
+      <rect width="32" height="32" fill="#fff"/>
+      <path d="M24.37 18.17A4.4 4.4 0 1 0 24.37 23.83" fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <use href="#first-press" fill="#a9dbd3" mask="url(#first-press-cutout)"/>
+  <use href="#second-press" fill="#4fb3a6" mask="url(#second-press-cutout)"/>
+  <use href="#third-press" fill="#167c80" mask="url(#third-press-cutout)"/>
+  <path d="M26 1.5Q26.6 5.4 30.5 6Q26.6 6.6 26 10.5Q25.4 6.6 21.5 6Q25.4 5.4 26 1.5Z" fill="#f2a33a"/>
+</svg>

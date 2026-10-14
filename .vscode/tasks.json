@@ -1,0 +1,32 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cvtranslate: prepare debug",
+      "type": "process",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/dev.mjs", "--prepare-debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "cvtranslate",
+        "pattern": { "regexp": "^CVTRANSLATE_TOOL_ERROR (.*):(\\d+): (.*)$", "file": 1, "line": 2, "message": 3 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^CVTRANSLATE_DEV_STARTING$",
+          "endsPattern": "^CVTRANSLATE_DEBUG_READY$"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "runOptions": { "instanceLimit": 1 }
+    },
+    {
+      "label": "cvtranslate: stop debug",
+      "type": "process",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/dev.mjs", "--stop-debug"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    }
+  ]
+}

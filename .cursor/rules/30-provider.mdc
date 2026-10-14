@@ -1,0 +1,10 @@
+---
+description: Provider expansion requirements
+globs: "internal/provider/**/*.go"
+alwaysApply: false
+---
+Read docs/development/provider-guide.md before editing or adding adapters.
+Keep adapter configuration explicit and advertise actual capabilities.
+No imports from platform, storage, translation orchestration or HTTP server.
+Map errors safely, honor cancellation and bound upstream input/output.
+Add focused mock HTTP tests; never test against a paid provider by default.

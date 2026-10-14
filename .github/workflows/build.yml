@@ -1,0 +1,144 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "web/**"
+      - "scripts/**"
+      - "go.mod"
+      - "go.sum"
+      - "package.json"
+      - "package-lock.json"
+      - "LICENSE"
+      - "docs/release.md"
+      - "docs/third-party/**"
+      - ".gitattributes"
+      - ".github/workflows/build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "cmd/**"
+      - "internal/**"
+      - "web/**"
+      - "scripts/**"
+      - "go.mod"
+      - "go.sum"
+      - "package.json"
+      - "package-lock.json"
+      - "LICENSE"
+      - "docs/release.md"
+      - "docs/third-party/**"
+      - ".gitattributes"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Pushes to main queue instead of cancelling, so each release tag is computed
+# after the previous one exists and a half-published release is never aborted.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  version:
+    name: Compute version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Next patch version from tags
+        id: next
+        run: |
+          version=$(node scripts/release-version.mjs)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Release version: $version"
+
+  build:
+    name: Build (${{ matrix.os }})
+    needs: version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            cgo: "0"
+          - os: macos-latest
+            cgo: "1"
+    env:
+      CGO_ENABLED: ${{ matrix.cgo }}
+      RELEASE_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          go mod download
+
+      - name: Check and package
+        shell: bash
+        run: node scripts/build.mjs --release-version="$RELEASE_VERSION"
+
+      - name: Upload unsigned artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: cvtranslate-${{ matrix.os }}
+          path: release/cvtranslate-*/
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    needs: [version, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Collect archives and checksums
+        run: |
+          mkdir upload
+          find artifacts -name "cvtranslate-${RELEASE_VERSION}-*.zip" -exec cp {} upload/ \;
+          test "$(ls upload | wc -l)" -eq 2
+          (cd upload && sha256sum *.zip > SHA256SUMS)
+          cat upload/SHA256SUMS
+
+      - name: Create tag and release
+        run: |
+          gh release create "v${RELEASE_VERSION}" upload/* \
+            --target "$GITHUB_SHA" \
+            --title "CVTranslate ${RELEASE_VERSION}" \
+            --generate-notes

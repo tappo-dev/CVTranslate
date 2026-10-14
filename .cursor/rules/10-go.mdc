@@ -1,0 +1,11 @@
+---
+description: Go boundaries, errors and tests
+globs: "**/*.go"
+alwaysApply: false
+---
+Follow CONTRIBUTING.md and docs/architecture.md.
+Use gofmt, descriptive identifiers, explicit errors and propagated contexts.
+One translation service serves every entry point.
+Keep native code in platform-specific files and SQLite behind storage.
+Never silently retry billing, log secrets/text, or ignore persistence failures.
+Test consequential error paths with mocks rather than paid or native side effects.

@@ -1,0 +1,18 @@
+---
+description: Required CVTranslate scope, architecture and change workflow
+alwaysApply: true
+---
+# Project contract
+
+Read AGENTS.md, CONTRIBUTING.md and docs/architecture.md before changes.
+New features follow docs/development/feature-checklist.md.
+Provider work follows docs/development/provider-guide.md even for new files.
+Tooling work follows docs/development/workflows.md.
+Keep Windows/macOS scope, data, credential and paste safety boundaries intact.
+Keep dev, F5, check and build usable; report unverified platforms honestly.
+No paid calls, permission changes, automated UI acceptance or remote publication
+without authorization. Do not undo unrelated user work.
+Parallel edits are expected: reload affected files before each patch, merge with
+their latest contents, and continue without asking for confirmation solely because
+they changed concurrently. Adapt stale patches and verify the integrated result.
+Stop only for destructive or materially ambiguous conflicts that cannot be merged safely.
