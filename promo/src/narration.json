@@ -1,9 +1,0 @@
-{
-  "intro": "好用的翻译工具已经很多。CVTranslate 只解决一件更小的事。",
-  "problem": "写文字、写代码时，不离开当前输入位置，把刚写好的一段话马上译出来。",
-  "triplePress": "比如和 Claude 对话，先用中文写完，选中后连按三次 Control C，英文译文直接替换刚才的中文。",
-  "quadruplePress": "想先看一眼，就连按四次，在工作台里确认后再复制。",
-  "providers": "还可以接入自己的大模型，给它设定人设，让译文更接近你平时的语气。",
-  "privacy": "设置和历史保存在本机，没有账号，也没有遥测。翻译内容会发送给你选择的服务。",
-  "outro": "CVTranslate，支持 Windows 和 macOS。欢迎到 GitHub 试用。"
-}

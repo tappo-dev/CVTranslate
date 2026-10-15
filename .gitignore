@@ -14,6 +14,7 @@ node_modules/
 .turbo/
 *.tsbuildinfo
 .eslintcache
+promo/
 
 # Local application data, tooling ownership files and release packages.
 /.local/
