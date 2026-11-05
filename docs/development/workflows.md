@@ -50,7 +50,16 @@ graceful cleanup; stale ownership fails closed instead of guessing a PID.
 
 ## F5 Go debugging
 
-Select **CVTranslate: Dev**. The pre-launch process task runs
+Editor configuration under `.vscode/` is local and not version-controlled. A
+launch configuration needs a Go `debug` launch of `cmd/cvtranslate` with
+`buildFlags: -tags=dev`, args `--port=19328`,
+`--data-dir=${workspaceFolder}/.local/dev` and
+`--vite-url=http://127.0.0.1:19329`, a background pre-launch process task running
+`node scripts/dev.mjs --prepare-debug` (begins at `CVTRANSLATE_DEV_STARTING`,
+ends at `CVTRANSLATE_DEBUG_READY`) and a post-debug task running
+`node scripts/dev.mjs --stop-debug`.
+
+Select that launch configuration. The pre-launch process task runs
 `node scripts/dev.mjs --prepare-debug`, owns Vite, and emits
 `CVTRANSLATE_DEBUG_READY` only after Vite responds. Its background problem matcher
 allows the Go debugger to launch with `buildFlags: -tags=dev` and the same

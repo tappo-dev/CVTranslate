@@ -136,7 +136,7 @@ npm run build
 
 `build` 会先执行完整检查，`check` 也可单独运行。产物位于 `release/`，包含程序、ZIP、校验和、构建信息及第三方声明。只构建当前主机的平台和架构，不自动上传、签名、公证或覆盖已有发布目录。
 
-仓库提供 VS Code / Cursor 共用的 F5 调试配置；依赖安装、调试器准备和排错见 [开发工作流](docs/development/workflows.md)，产物规则见 [构建与发布](docs/release.md)。
+依赖安装、F5 调试配置和排错见 [开发工作流](docs/development/workflows.md)，产物规则见 [构建与发布](docs/release.md)。
 
 ## 反馈与参与
 

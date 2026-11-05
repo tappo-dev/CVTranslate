@@ -111,13 +111,21 @@ lcov.info
 .vscode-test/
 *.code-workspace
 
-# Keep shared F5 configuration and project rules, not personal IDE state.
-/.vscode/*
-!/.vscode/extensions.json
-!/.vscode/launch.json
-!/.vscode/tasks.json
-/.cursor/*
-!/.cursor/rules/
+# Editor and AI-assistant configuration stays local.
+/.vscode/
+/.cursor/
+/.claude/
+/.codex/
+/.windsurf/
+/.continue/
+/.aider*
+/.github/copilot-instructions.md
+/AGENTS.md
+/CLAUDE.md
+/CLAUDE.local.md
+/GEMINI.md
+/.cursorrules
+/.windsurfrules
 
 # Windows and macOS filesystem metadata.
 .DS_Store
