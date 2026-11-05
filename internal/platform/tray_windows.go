@@ -21,6 +21,7 @@ const (
 	trayKeySelect       = 0x0401
 	trayOpenCommand     = 1
 	trayQuitCommand     = 2
+	trayLaunchCommand   = 3
 	trayIconAdd         = 0
 	trayIconDelete      = 2
 	trayIconSetVersion  = 4
@@ -85,6 +86,7 @@ type windowsTray struct {
 	done       chan struct{}
 	queue      *trayEventQueue
 	notifyIcon func(uintptr, *trayIconData) error
+	options    TrayOptions
 	// These fields belong to the locked message thread until done closes.
 	menu           uintptr
 	icon           trayIconData
@@ -96,8 +98,8 @@ type windowsTray struct {
 
 // StartTray creates a hidden top-level window on a dedicated OS thread. Unlike
 // a message-only window, it receives Explorer's TaskbarCreated broadcast.
-func StartTray() (*Tray, error) {
-	native := &windowsTray{done: make(chan struct{}), queue: newTrayEventQueue(), notifyIcon: updateWindowsTrayIcon}
+func StartTray(options TrayOptions) (*Tray, error) {
+	native := &windowsTray{done: make(chan struct{}), queue: newTrayEventQueue(), notifyIcon: updateWindowsTrayIcon, options: options}
 	ready := make(chan error, 1)
 	go native.run(ready)
 	if err := <-ready; err != nil {
@@ -237,15 +239,20 @@ func (native *windowsTray) createMenu() error {
 		return fmt.Errorf("create tray menu: %w", menuError)
 	}
 	native.menu = menu
-	for _, item := range []struct {
+	type menuItem struct {
 		flags   uintptr
 		command uintptr
 		label   string
-	}{
-		{command: trayOpenCommand, label: "\u6253\u5f00\u7ba1\u7406\u754c\u9762"},
-		{flags: 0x0800}, // MF_SEPARATOR
-		{command: trayQuitCommand, label: "\u9000\u51fa"},
-	} {
+	}
+	items := []menuItem{{command: trayOpenCommand, label: "\u6253\u5f00\u7ba1\u7406\u754c\u9762"}}
+	if native.options.LaunchAtLogin != nil {
+		items = append(items, menuItem{command: trayLaunchCommand, label: "\u5f00\u673a\u542f\u52a8"})
+	}
+	items = append(items,
+		menuItem{flags: 0x0800}, // MF_SEPARATOR
+		menuItem{command: trayQuitCommand, label: "\u9000\u51fa"},
+	)
+	for _, item := range items {
 		label, _ := windows.UTF16PtrFromString(item.label)
 		added, _, appendError := user32.NewProc("AppendMenuW").Call(menu, item.flags, item.command, uintptr(unsafe.Pointer(label)))
 		if added == 0 {
@@ -334,6 +341,13 @@ func (native *windowsTray) showMenu(position uintptr) {
 			return
 		}
 	}
+	launch := native.options.LaunchAtLogin
+	if launch != nil {
+		// Read the registration on every open: WebUI and Task Manager can change it.
+		enabled, err := launch.Enabled()
+		native.options.report(err)
+		native.updateLaunchItem(enabled, err == nil)
+	}
 	// Foreground ownership is needed only for this explicit user-invoked menu;
 	// WM_NULL after dismissal lets Windows dismiss later menus normally.
 	user32.NewProc("SetForegroundWindow").Call(native.window)
@@ -350,7 +364,24 @@ func (native *windowsTray) showMenu(position uintptr) {
 		native.queue.requestOpen()
 	case trayQuitCommand:
 		native.queue.requestQuit()
+	case trayLaunchCommand:
+		if launch != nil {
+			_, err := launch.toggle()
+			native.options.report(err)
+		}
 	}
+}
+
+func (native *windowsTray) updateLaunchItem(enabled, available bool) {
+	check, enable := uintptr(0x0000), uintptr(0x0000) // MF_BYCOMMAND | MF_UNCHECKED / MF_ENABLED
+	if enabled {
+		check = 0x0008 // MF_CHECKED
+	}
+	if !available {
+		enable = 0x0001 // MF_GRAYED
+	}
+	user32.NewProc("CheckMenuItem").Call(native.menu, trayLaunchCommand, check)
+	user32.NewProc("EnableMenuItem").Call(native.menu, trayLaunchCommand, enable)
 }
 
 func (native *windowsTray) close() error {

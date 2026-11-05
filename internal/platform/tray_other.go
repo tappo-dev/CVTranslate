@@ -3,4 +3,4 @@
 package platform
 
 // StartTray is inert on builds without a supported native desktop adapter.
-func StartTray() (*Tray, error) { return &Tray{}, nil }
+func StartTray(TrayOptions) (*Tray, error) { return &Tray{}, nil }

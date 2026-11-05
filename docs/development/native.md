@@ -25,8 +25,11 @@ operations, not working native adapters.
 ```go
 func RunMain(run func())
 func OnReopen(callback func()) func()
-func StartTray() (*Tray, error)
+func StartTray(options TrayOptions) (*Tray, error)
 func (*Tray) Close() error
+func NewLaunchAtLogin() (*LaunchAtLogin, error)
+func (*LaunchAtLogin) Enabled() (bool, error)
+func (*LaunchAtLogin) SetEnabled(enabled bool) error
 func NewDesktop() *Desktop
 func (*Desktop) Status() Status
 func (*Desktop) ConfigureHotkeys(keys domain.Hotkeys, callback func(ShortcutEvent)) error
@@ -67,6 +70,29 @@ callbacks already executing. The library's macOS `RunMain` implementation exits
 the process when `run` returns; cleanup belongs **inside** `run`, not in a defer
 outside `RunMain`.
 
+### Launch at login
+
+`LaunchAtLogin` registers the resolved current executable with `--no-open`, so a
+login launch starts in the background without opening a browser. The OS
+registration is the only state: the WebUI toggle and the tray/menu-bar item read
+and write it directly, and nothing is stored in the database. A registration for
+another executable path reads as disabled; enabling replaces it.
+
+- Windows writes the `CVTranslate` value under
+  `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (no elevation). An entry
+  disabled in Task Manager's Startup apps (`StartupApproved\Run`) reads as
+  disabled; enabling or disabling here clears that override.
+- macOS writes `~/Library/LaunchAgents/com.cvtranslate.desktop.login.plist`
+  (`RunAtLoad`, no `KeepAlive`, so Quit stays effective). launchd reads it at the
+  next login; no `launchctl` call or permission is needed. A Gatekeeper-translocated
+  executable cannot be registered; move the app to Applications first. Disabling
+  the item in System Settings > Login Items is not detected.
+
+Development builds and `--no-native` never create the object. Menu toggles run
+on the Windows message thread or the macOS polling worker (never on Cocoa's main
+thread) and report failures to the composition root's log only. Windows reads the
+state each time the menu opens; macOS refreshes a native atomic every second.
+
 ### Windows system tray
 
 `StartTray` owns a hidden top-level Win32 window, a notification icon and a native
@@ -74,7 +100,8 @@ popup menu on a locked OS thread. It creates an owned HICON from an embedded
 PNG generated from the shared [SVG source](icons.md), with a `CVTranslate`
 tooltip. There is no runtime image file lookup or new runtime dependency.
 Click/keyboard activation queues `TrayOpenUI`; the context menu has Chinese
-labels for Open management UI and Quit. Quit queues `TrayQuit`, replacing any
+labels for Open management UI, Launch at login (checked from the registry when
+the menu opens, omitted when unavailable) and Quit. Quit queues `TrayQuit`, replacing any
 pending open and suppressing later actions. Native callbacks never open a browser
 or perform application cleanup themselves. The owning composition loop consumes
 the read-only `Tray.Events` channel.
@@ -125,7 +152,7 @@ displayed at 18pt with a CVTranslate tooltip and accessibility label. The native
 adapter copies the bytes during installation and retains no Go pointer. AppKit
 supplies its standard menu-bar tint and native menu interaction; this does not
 add a WebUI theme or runtime dependency.
-The menu has Chinese Open management UI and Quit labels. It does not inspect
+The menu has Chinese Open management UI, Launch at login and Quit labels. It does not inspect
 clipboard content, request permissions, change activation policy or replace the
 Finder reopen delegate. It remains available when shortcut permissions are denied.
 

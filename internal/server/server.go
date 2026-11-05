@@ -24,6 +24,12 @@ type Credentials interface {
 	Has(string) (bool, error)
 }
 
+// LaunchAtLogin reads and changes the OS login item; nil means unavailable.
+type LaunchAtLogin interface {
+	Enabled() (bool, error)
+	SetEnabled(bool) error
+}
+
 type Options struct {
 	Origin           string
 	Version          string
@@ -34,6 +40,7 @@ type Options struct {
 	Updates          UpdateChecker
 	PlatformStatus   func() any
 	ConfigureHotkeys func(domain.Hotkeys) error
+	LaunchAtLogin    LaunchAtLogin
 	OpenBrowser      func(string) error
 	ControlToken     string
 }
@@ -56,6 +63,7 @@ func New(store *storage.Store, jobs *translation.Service, options Options) *Serv
 	server.router.HandleFunc("POST /api/prompts/preview", server.previewPrompt)
 	server.router.HandleFunc("DELETE /api/prompts/{id}", server.deletePrompt)
 	server.router.HandleFunc("PUT /api/settings", server.saveSettings)
+	server.router.HandleFunc("PUT /api/launch-at-login", server.setLaunchAtLogin)
 	server.router.HandleFunc("POST /api/tasks", server.startTask)
 	server.router.HandleFunc("GET /api/tasks/{id}", server.getTask)
 	server.router.HandleFunc("POST /api/tasks/{id}/cancel", server.cancelTask)

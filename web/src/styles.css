@@ -1439,7 +1439,13 @@ dd {
   gap: 9px;
   font-weight: 400;
 }
-.checkbox-label input {
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  min-height: var(--control-height);
+}
+.checkbox-label input,
+.settings-toggle input {
   width: 15px;
   height: 15px;
   min-height: 0;

@@ -189,6 +189,8 @@ export function SettingsPage({
   const shortcut = platform.shortcut;
   const action = useAction();
   const historyAction = useAction();
+  const launchAction = useAction();
+  const launchAtLogin = platform.launchAtLogin;
   const { confirm } = useFeedback();
   const dirty = JSON.stringify(draft) !== JSON.stringify(state.settings);
   const defaultProvider = state.providers.find(
@@ -246,6 +248,24 @@ export function SettingsPage({
       draft.port !== state.settings.port
         ? "设置已保存，端口重启后生效。"
         : "设置已保存",
+    );
+  }
+
+  // The login item is OS state shared with the tray menu, not part of the draft.
+  function changeLaunchAtLogin(enabled: boolean) {
+    void launchAction.run(
+      async (signal) => {
+        const result = await request<{ enabled: boolean }>(
+          "/launch-at-login",
+          { method: "PUT", body: { enabled }, signal },
+        );
+        if (!signal.aborted)
+          setPlatform((current) => ({
+            ...current,
+            launchAtLogin: { available: true, enabled: result.enabled },
+          }));
+      },
+      enabled ? "已开启开机启动" : "已关闭开机启动",
     );
   }
 
@@ -530,28 +550,58 @@ export function SettingsPage({
                     </span>
                   </button>
                 </div>
-                <div className="settings-row">
-                  <label htmlFor="settings-port">监听端口</label>
-                  <div className="settings-control">
-                    <input
-                      id="settings-port"
-                      type="number"
-                      aria-describedby="settings-port-help"
-                      required
-                      min={1024}
-                      max={65535}
-                      value={draft.port}
-                      onChange={(event) =>
-                        setDraft({
-                          ...draft,
-                          port: Number(event.target.value),
-                        })
-                      }
-                    />
-                    <small id="settings-port-help">
-                      下次重启生效。当前页面端口：{location.port || "默认"}
-                    </small>
+                <div className="settings-fields">
+                  <div className="settings-row">
+                    <label htmlFor="settings-port">监听端口</label>
+                    <div className="settings-control">
+                      <input
+                        id="settings-port"
+                        type="number"
+                        aria-describedby="settings-port-help"
+                        required
+                        min={1024}
+                        max={65535}
+                        value={draft.port}
+                        onChange={(event) =>
+                          setDraft({
+                            ...draft,
+                            port: Number(event.target.value),
+                          })
+                        }
+                      />
+                      <small id="settings-port-help">
+                        下次重启生效。当前页面端口：{location.port || "默认"}
+                      </small>
+                    </div>
                   </div>
+                  <div className="settings-row">
+                    <label htmlFor="launch-at-login">开机启动</label>
+                    <div className="settings-control">
+                      <div className="settings-toggle">
+                        <input
+                          id="launch-at-login"
+                          type="checkbox"
+                          checked={launchAtLogin?.enabled ?? false}
+                          disabled={!launchAtLogin?.available || launchAction.busy}
+                          aria-busy={launchAction.busy}
+                          aria-describedby={
+                            launchAtLogin?.available
+                              ? undefined
+                              : "launch-at-login-help"
+                          }
+                          onChange={(event) =>
+                            changeLaunchAtLogin(event.target.checked)
+                          }
+                        />
+                      </div>
+                      {!launchAtLogin?.available && (
+                        <small id="launch-at-login-help">
+                          {state.development ? "开发版本不可用" : "当前会话不可用"}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                  <Notice error>{launchAction.error}</Notice>
                 </div>
                 <dl className="platform-info">
                   <div className="settings-row">

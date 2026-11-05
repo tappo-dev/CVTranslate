@@ -165,9 +165,18 @@ func runApplication(options arguments) (resultError error) {
 	serverOptions := server.Options{Origin: "http://" + address, Version: version, Development: web.Development, Assets: assets, Credentials: credentials, Speech: speech.New(), Updates: update.New(), OpenBrowser: platform.OpenBrowser, ControlToken: controlToken}
 	var native *platform.Desktop
 	var workflow *desktopworkflow.Controller
+	var launchAtLogin *platform.LaunchAtLogin
 	if !options.noNative {
 		native = platform.NewDesktop()
 		defer native.Close()
+		// Development binaries live in the checkout and must not become login items.
+		if !web.Development {
+			if launchAtLogin, err = platform.NewLaunchAtLogin(); err != nil {
+				log.Printf("Launch at login is unavailable: %v", err)
+			} else {
+				serverOptions.LaunchAtLogin = launchAtLogin
+			}
+		}
 		serverOptions.ConfigureHotkeys = func(keys domain.Hotkeys) error { return native.ConfigureHotkeys(keys, workflow.Handle) }
 		serverOptions.PlatformStatus = func() any {
 			status := native.Status()
@@ -177,8 +186,9 @@ func runApplication(options arguments) (resultError error) {
 			}
 			return struct {
 				platform.Status
-				Shortcut desktopworkflow.ShortcutStatus `json:"shortcut"`
-			}{Status: status, Shortcut: shortcut}
+				Shortcut      desktopworkflow.ShortcutStatus `json:"shortcut"`
+				LaunchAtLogin launchAtLoginStatus            `json:"launchAtLogin"`
+			}{Status: status, Shortcut: shortcut, LaunchAtLogin: readLaunchAtLogin(launchAtLogin)}
 		}
 	} else {
 		serverOptions.PlatformStatus = func() any {
@@ -205,7 +215,9 @@ func runApplication(options arguments) (resultError error) {
 	var trayEvents <-chan platform.TrayEvent
 	var tray *platform.Tray
 	if native != nil {
-		tray, err = platform.StartTray()
+		tray, err = platform.StartTray(platform.TrayOptions{LaunchAtLogin: launchAtLogin, ReportError: func(err error) {
+			log.Printf("Launch at login change failed: %v", err)
+		}})
 		if err != nil {
 			return fmt.Errorf("cannot start system tray: %w", err)
 		}
@@ -243,6 +255,19 @@ func runApplication(options arguments) (resultError error) {
 		_ = httpServer.Close()
 	}
 	return resultError
+}
+
+type launchAtLoginStatus struct {
+	Available bool `json:"available"`
+	Enabled   bool `json:"enabled"`
+}
+
+func readLaunchAtLogin(launch *platform.LaunchAtLogin) launchAtLoginStatus {
+	if launch == nil {
+		return launchAtLoginStatus{}
+	}
+	enabled, err := launch.Enabled()
+	return launchAtLoginStatus{Available: err == nil, Enabled: enabled}
 }
 
 func reopenExisting(dataDirectory string) error {

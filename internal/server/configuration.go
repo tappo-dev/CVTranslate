@@ -421,6 +421,36 @@ func (server *Server) saveSettings(writer http.ResponseWriter, request *http.Req
 	writeJSON(writer, http.StatusOK, input)
 }
 
+// The login item is OS state, not part of the settings draft: it applies
+// immediately and is never written to the database.
+func (server *Server) setLaunchAtLogin(writer http.ResponseWriter, request *http.Request) {
+	var input struct {
+		Enabled *bool `json:"enabled"`
+	}
+	if !readJSON(writer, request, &input) {
+		return
+	}
+	if input.Enabled == nil {
+		writeError(writer, http.StatusBadRequest, "invalid_input", "Specify whether to launch at login.")
+		return
+	}
+	launch := server.options.LaunchAtLogin
+	if launch == nil {
+		writeError(writer, http.StatusServiceUnavailable, "launch_at_login_unavailable", "Launch at login is unavailable in this session.")
+		return
+	}
+	if err := launch.SetEnabled(*input.Enabled); err != nil {
+		writeError(writer, http.StatusInternalServerError, "launch_at_login_failed", "Could not update the login item.")
+		return
+	}
+	enabled, err := launch.Enabled()
+	if err != nil {
+		writeError(writer, http.StatusInternalServerError, "launch_at_login_failed", "Could not read the login item.")
+		return
+	}
+	writeJSON(writer, http.StatusOK, map[string]bool{"enabled": enabled})
+}
+
 func credentialError(writer http.ResponseWriter) {
 	writeError(writer, http.StatusServiceUnavailable, "credential_store_failed", "The operating system credential store is unavailable. No plaintext fallback is used.")
 }

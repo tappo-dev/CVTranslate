@@ -486,6 +486,43 @@ describe("settings tabs", () => {
     });
   });
 
+  it("applies launch at login immediately without dirtying the settings draft", async () => {
+    const state = createTestAppState();
+    state.platform.launchAtLogin = { available: true, enabled: false };
+    render(
+      <FeedbackProvider>
+        <SettingsPage state={state} updateState={vi.fn()} />
+      </FeedbackProvider>,
+    );
+    selectTab("本地服务");
+    const toggle = screen.getByLabelText("开机启动") as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+    vi.mocked(request).mockResolvedValueOnce({ enabled: true });
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+    expect(request).toHaveBeenCalledExactlyOnceWith("/launch-at-login", {
+      method: "PUT",
+      body: { enabled: true },
+      signal: expect.any(AbortSignal),
+    });
+    expect(toggle.checked).toBe(true);
+    expect(screen.queryByRole("button", { name: "保存设置" })).toBeNull();
+  });
+
+  it("disables launch at login when the session cannot register login items", () => {
+    const state = createTestAppState();
+    state.development = true;
+    render(
+      <FeedbackProvider>
+        <SettingsPage state={state} updateState={vi.fn()} />
+      </FeedbackProvider>,
+    );
+    selectTab("本地服务");
+    expect((screen.getByLabelText("开机启动") as HTMLInputElement).disabled).toBe(true);
+    expect(screen.getByText("开发版本不可用")).toBeTruthy();
+  });
+
   it("selects the invalid hidden panel instead of bypassing its validation", () => {
     render(
       <FeedbackProvider>

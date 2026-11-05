@@ -4,14 +4,19 @@
 #import <dispatch/dispatch.h>
 #include <stdatomic.h>
 
-enum { CVTrayIdle = 0, CVTrayOpen = 1, CVTrayQuit = 2 };
+enum { CVTrayIdle = 0, CVTrayOpen = 1, CVTrayQuit = 2, CVTrayToggleLaunch = 3 };
+enum { CVLaunchOff = 0, CVLaunchOn = 1, CVLaunchUnavailable = 2 };
 static atomic_int trayPending = CVTrayIdle;
+// Written by the Go worker, applied to the menu item on the main thread.
+static atomic_int trayLaunchState = CVLaunchUnavailable;
 // Cocoa objects and action acceptance belong exclusively to the main thread.
 static BOOL trayAccepting = NO;
 static NSStatusItem *trayStatusItem = nil;
+static NSMenuItem *trayLaunchItem = nil;
 
-@interface CVTrayTarget : NSObject
+@interface CVTrayTarget : NSObject <NSMenuDelegate>
 - (void)openManagement:(id)sender;
+- (void)toggleLaunchAtLogin:(id)sender;
 - (void)quitApplication:(id)sender;
 @end
 
@@ -20,6 +25,17 @@ static NSStatusItem *trayStatusItem = nil;
     if (!trayAccepting) return;
     int expected = CVTrayIdle;
     atomic_compare_exchange_strong(&trayPending, &expected, CVTrayOpen);
+}
+- (void)toggleLaunchAtLogin:(id)sender {
+    if (!trayAccepting) return;
+    int expected = CVTrayIdle;
+    atomic_compare_exchange_strong(&trayPending, &expected, CVTrayToggleLaunch);
+}
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+    if (!trayLaunchItem || !trayAccepting) return;
+    int state = atomic_load(&trayLaunchState);
+    [trayLaunchItem setState:state == CVLaunchOn ? NSControlStateValueOn : NSControlStateValueOff];
+    [trayLaunchItem setEnabled:state != CVLaunchUnavailable];
 }
 - (void)quitApplication:(id)sender {
     if (!trayAccepting) return;
@@ -49,7 +65,7 @@ static NSImage *CVTrayImage(const void *imageBytes, size_t imageLength) {
     return image;
 }
 
-int cv_tray_install(const void *imageBytes, size_t imageLength) {
+int cv_tray_install(const void *imageBytes, size_t imageLength, int launchItem) {
     __block int result = 1;
     CVTrayMain(^{
         if (trayStatusItem || !NSApp) return;
@@ -67,7 +83,10 @@ int cv_tray_install(const void *imageBytes, size_t imageLength) {
             action:@selector(openManagement:) keyEquivalent:@""];
         NSMenuItem *quitItem = [[NSMenuItem alloc] initWithTitle:@"\u9000\u51fa"
             action:@selector(quitApplication:) keyEquivalent:@""];
-        if (!target || !menu || !openItem || !quitItem) {
+        NSMenuItem *launchMenuItem = launchItem ? [[NSMenuItem alloc] initWithTitle:@"\u5f00\u673a\u542f\u52a8"
+            action:@selector(toggleLaunchAtLogin:) keyEquivalent:@""] : nil;
+        if (!target || !menu || !openItem || !quitItem || (launchItem && !launchMenuItem)) {
+            [launchMenuItem release];
             [openItem release];
             [quitItem release];
             [menu release];
@@ -79,7 +98,15 @@ int cv_tray_install(const void *imageBytes, size_t imageLength) {
         [menu setAutoenablesItems:NO];
         [openItem setTarget:target];
         [quitItem setTarget:target];
+        [menu setDelegate:target];
         [menu addItem:openItem];
+        if (launchMenuItem) {
+            [launchMenuItem setTarget:target];
+            [launchMenuItem setEnabled:NO];
+            [menu addItem:launchMenuItem];
+            trayLaunchItem = launchMenuItem;
+            [launchMenuItem release];
+        }
         [menu addItem:[NSMenuItem separatorItem]];
         [menu addItem:quitItem];
         [openItem release];
@@ -98,6 +125,10 @@ int cv_tray_install(const void *imageBytes, size_t imageLength) {
     return result;
 }
 
+void cv_tray_set_launch_state(int state) {
+    atomic_store(&trayLaunchState, state);
+}
+
 // Called by the Go worker without dispatching to Cocoa or holding Go pointers.
 int cv_tray_consume(void) {
     return atomic_exchange(&trayPending, CVTrayIdle);
@@ -109,6 +140,8 @@ void cv_tray_remove(void) {
         atomic_store(&trayPending, CVTrayIdle);
         if (trayStatusItem) {
             [[trayStatusItem menu] cancelTrackingWithoutAnimation];
+            [[trayStatusItem menu] setDelegate:nil];
+            trayLaunchItem = nil;
             [trayStatusItem setMenu:nil];
             [[NSStatusBar systemStatusBar] removeStatusItem:trayStatusItem];
             [trayStatusItem release];

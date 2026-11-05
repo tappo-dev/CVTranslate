@@ -69,6 +69,7 @@ export interface AppState {
     pasteAvailable: boolean;
     message: string;
     shortcut?: ShortcutStatus;
+    launchAtLogin?: { available: boolean; enabled: boolean };
   };
   version: string;
   development: boolean;

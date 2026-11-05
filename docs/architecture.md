@@ -150,7 +150,11 @@ service and in-memory audio lifecycle; it cannot override workspace reading.
 ## Desktop and development
 
 Windows exposes a native notification-area icon, and macOS a Cocoa menu-bar icon,
-with open-WebUI and quit actions.
+with open-WebUI, launch-at-login and quit actions. Launch at login is a per-user
+OS login item (Windows HKCU Run key, macOS user LaunchAgent) started with
+`--no-open`; the OS registration is its only state, shared by the tray and the
+WebUI's immediate toggle, with no settings field or migration. Development builds
+do not offer it.
 The platform adapter only queues events; the composition root owns browser work
 and graceful shutdown. Quit cancels shortcut/paste work and translations, removes
 native registrations and drains HTTP before closing storage. A lost tray stops

@@ -11,6 +11,19 @@ const (
 // Tray owns a native notification-area or menu-bar icon. Events closes if its
 // event delivery stops; the application must then shut down rather than lose exit.
 // Unsupported platforms return an inert Tray with a nil Events channel.
+// TrayOptions adds optional menu entries. A nil LaunchAtLogin omits that item;
+// ReportError receives menu-action failures that have no other UI surface.
+type TrayOptions struct {
+	LaunchAtLogin *LaunchAtLogin
+	ReportError   func(error)
+}
+
+func (options TrayOptions) report(err error) {
+	if err != nil && options.ReportError != nil {
+		options.ReportError(err)
+	}
+}
+
 type Tray struct {
 	Events <-chan TrayEvent
 	close  func() error

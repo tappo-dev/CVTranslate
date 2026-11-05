@@ -12,7 +12,8 @@ checks, not protection against native clients on the same machine.
   response. Browser-open URLs contain no authorization material or expiry.
 - GET `/api/state`: `{providers: ProviderConfig[], providerTypes: {type,name,defaultModel,supportsPrompts,supportsApiKey,configurableEndpoint,requiresModel}[], prompts: Prompt[], settings:
   Settings, languages: Language[], speechVoices: {id,name,language}[], platform: {os, hotkeysAvailable, pasteAvailable,
-  message, shortcut?: {action, stage, message, occurredAt, taskId?}}, version:
+  message, shortcut?: {action, stage, message, occurredAt, taskId?},
+  launchAtLogin?: {available, enabled}}, version:
   string, development: boolean}`. Domain types match domain/models.go.
   `shortcut` is transient diagnostic state (absent with native integration
   disabled); an empty action means no received shortcut. It includes neither
@@ -64,6 +65,11 @@ checks, not protection against native clients on the same machine.
   settings return 400 `invalid_speech_settings` without changing any settings or
   hotkeys. Saving never synthesizes audio. Migration 003 adds missing settings
   with Edge and the existing default voices without replacing other data.
+- PUT `/api/launch-at-login`: `{enabled: boolean}`; returns `{enabled}` re-read
+  from the OS. Applies immediately, outside the settings draft, and writes no
+  database row. Returns 503 `launch_at_login_unavailable` in development builds,
+  with `--no-native` or when the executable cannot be registered, and 500
+  `launch_at_login_failed` when the OS write/read fails.
 - POST `/api/tasks`: TranslationInput; returns Task with HTTP 202. Browser submits
   entry `web`; server reserves `clipboard-ui`/`clipboard-paste` for native
   actions. Removed `selection-ui`/`selection-paste` entries are rejected. Browser
